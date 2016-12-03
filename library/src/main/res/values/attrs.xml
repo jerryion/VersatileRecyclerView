@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="WheelRecyclerView">
+        <attr name="selectTextSize" format="dimension"/>
+        <attr name="unselectTextSize" format="dimension"/>
+        <attr name="selectTextColor" format="color"/>
+        <attr name="unselectTextColor" format="color"/>
+        <attr name="wheelOffset" format="integer"/>
+        <attr name="dividerWidth" format="dimension" />
+        <attr name="dividerHeight" format="dimension" />
+        <attr name="dividerColor" format="color" />
+    </declare-styleable>
+</resources>
