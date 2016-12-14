@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="WheelRecyclerView">
+        <attr name="itemHeight" format="dimension"/>
         <attr name="selectTextSize" format="dimension"/>
         <attr name="unselectTextSize" format="dimension"/>
         <attr name="selectTextColor" format="color"/>

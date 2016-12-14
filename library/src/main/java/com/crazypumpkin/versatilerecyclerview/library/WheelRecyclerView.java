@@ -26,60 +26,63 @@ import java.util.List;
 
 public class WheelRecyclerView extends RecyclerView {
 
+    //默认参数
     private final int DEFAULT_WIDTH = Util.dp2px(160);
 
-    private final int DEFAULT_ITEM_HEIGHT = Util.dp2px(30);
+    private final int DEFAULT_ITEM_HEIGHT = Util.dp2px(50);
 
-    private final int DEFAULT_SELECT_TEXT_COLOR = Color.parseColor("#2196F3");
+    private final int DEFAULT_SELECT_TEXT_COLOR = Color.parseColor("#3396FF");
 
-    private final int DEFAULT_UNSELECT_TEXT_COLOR = Color.parseColor("#8A000000");
+    private final int DEFAULT_UNSELECT_TEXT_COLOR = getResources().getColor(R.color.text_black);
 
-    private final int DEFAULT_SELECT_TEXT_SIZE = Util.sp2px(16);
+    private final int DEFAULT_SELECT_TEXT_SIZE = Util.sp2px(14);
 
-    private final int DEFAULT_UNSELECT_TEXT_SIZE = Util.sp2px(16);
+    private final int DEFAULT_UNSELECT_TEXT_SIZE = Util.sp2px(14);
 
     private final int DEFAULT_OFFSET = 1;
 
-    private final int DEFAULT_DIVIDER_WIDTH = -1;
+    private final int DEFAULT_DIVIDER_WIDTH = ViewGroup.LayoutParams.MATCH_PARENT;
 
     private final int DEFAULT_DIVIDER_HEIGHT = Util.dp2px(1);
 
-    private final int DEFAULT_DIVIVER_COLOR = Color.parseColor("#BBDEFB");
+    private final int DEFAULT_DIVIVER_COLOR = Color.parseColor("#E4F1FF");
+
 
     private WheelAdapter mAdapter;
 
     private LinearLayoutManager mLayoutManager;
 
-    private List<String> mDatas;
+    private List<String> mDatas; //数据
 
-    private int mItemHeight;
+    private int mItemHeight; //选项高度
 
-    private int mOffset;
+    private int mOffset; //处于中间的item为选中，在头尾需补充 offset个空白view，可显示的item数量=2*offset+1
 
-    private int mSelectTextColor;
+    private int mSelectTextColor; //选中item的文本颜色
 
-    private int mUnselectTextColor;
+    private int mUnselectTextColor; //非选中item的文本颜色
 
-    private float mSelectTextSize;
+    private float mSelectTextSize; //选中item的文本大小
 
-    private float mUnselectTextSize;
+    private float mUnselectTextSize;//非选中item的文本大小
 
-    private float mDividerWidth;
+    private float mDividerWidth;//分割线的宽度
 
-    private float mDividerHeight;
+    private float mDividerHeight;//分割线高度
 
-    private int mDividerColor;
+    private int mDividerColor;//分割线颜色
 
-    private Paint mPaint;
+    private Paint mPaint;//绘制分割线的paint
 
-    public WheelRecyclerView(Context context) {
-        super(context);
-    }
+    private OnSelectListener mOnSelectListener;
+
+    private int mSelected;
 
     public WheelRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.WheelRecyclerView);
 
+        mItemHeight = (int) ta.getDimension(R.styleable.WheelRecyclerView_itemHeight, DEFAULT_ITEM_HEIGHT);
         mSelectTextColor = ta.getColor(R.styleable.WheelRecyclerView_selectTextColor, DEFAULT_SELECT_TEXT_COLOR);
         mUnselectTextColor = ta.getColor(R.styleable.WheelRecyclerView_unselectTextColor, DEFAULT_UNSELECT_TEXT_COLOR);
         mSelectTextSize = ta.getDimension(R.styleable.WheelRecyclerView_selectTextSize, DEFAULT_SELECT_TEXT_SIZE);
@@ -95,7 +98,6 @@ public class WheelRecyclerView extends RecyclerView {
         mPaint = new Paint();
         mPaint.setColor(mDividerColor);
         mPaint.setStrokeWidth(mDividerHeight);
-        mItemHeight = DEFAULT_ITEM_HEIGHT;
 
         init();
     }
@@ -103,7 +105,9 @@ public class WheelRecyclerView extends RecyclerView {
     private void init() {
         mLayoutManager = new LinearLayoutManager(getContext());
         setLayoutManager(mLayoutManager);
-        addItemDecoration(new DividerItemDecoration());
+        if (mDividerColor != Color.TRANSPARENT && mDividerHeight != 0 && mDividerWidth != 0) {
+            addItemDecoration(new DividerItemDecoration());
+        }
         mAdapter = new WheelAdapter();
         setAdapter(mAdapter);
         addOnScrollListener(new OnWheelScrollListener());
@@ -111,9 +115,11 @@ public class WheelRecyclerView extends RecyclerView {
 
     @Override
     protected void onMeasure(int widthSpec, int heightSpec) {
+        int width;
         int height;
         int heightSpecSize = MeasureSpec.getSize(heightSpec);
         int heightSpecMode = MeasureSpec.getMode(heightSpec);
+        //当指定了控件高度时，每个item平分整个高度，控件无指定高度时，默认高度为可视item的累加高度
         switch (heightSpecMode) {
             case MeasureSpec.EXACTLY:
                 height = heightSpecSize;
@@ -123,15 +129,35 @@ public class WheelRecyclerView extends RecyclerView {
                 height = (mOffset * 2 + 1) * mItemHeight;
                 break;
         }
-        setMeasuredDimension(getDefaultSize(DEFAULT_WIDTH, widthSpec), height);
+        width = getDefaultSize(DEFAULT_WIDTH, widthSpec);
+        if (mDividerWidth == DEFAULT_DIVIDER_WIDTH) {
+            mDividerWidth = width;
+        }
+        setMeasuredDimension(width, height);
     }
 
     public void setData(List<String> datas) {
+        if(datas == null){
+            return;
+        }
         mDatas.clear();
         mDatas.addAll(datas);
         mAdapter.notifyDataSetChanged();
+        setSelect(0);
     }
 
+    public void setOnSelectListener(OnSelectListener listener) {
+        mOnSelectListener = listener;
+    }
+
+    public void setSelect(int position) {
+        mSelected = position;
+        mLayoutManager.scrollToPosition(mSelected);
+    }
+
+    public int getSelected() {
+        return mSelected;
+    }
 
     private class WheelAdapter extends Adapter<WheelAdapter.WheelHolder> {
 
@@ -149,6 +175,7 @@ public class WheelRecyclerView extends RecyclerView {
 
         @Override
         public void onBindViewHolder(WheelHolder holder, int position) {
+            //头尾填充offset个空白view以使数据能处于中间选中状态
             if (position < mOffset || position > mDatas.size() + mOffset - 1) {
                 holder.name.setText("");
             } else {
@@ -172,23 +199,43 @@ public class WheelRecyclerView extends RecyclerView {
         public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
             if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                //当控件停止滚动时，获取可视范围第一个item的位置，滚动调整控件以使选中的item刚好处于正中间
+                int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
+                if(firstVisiblePos == RecyclerView.NO_POSITION){
+                    return;
+                }
                 Rect rect = new Rect();
-                mLayoutManager.findViewByPosition(mLayoutManager.findFirstVisibleItemPosition()).getHitRect(rect);
+                mLayoutManager.findViewByPosition(firstVisiblePos).getHitRect(rect);
                 if (Math.abs(rect.top) > mItemHeight / 2) {
                     smoothScrollBy(0, rect.bottom);
+                    mSelected = firstVisiblePos + 1;
+
                 } else {
                     smoothScrollBy(0, rect.top);
+                    mSelected = firstVisiblePos;
                 }
+                if (mOnSelectListener != null) {
+                    mOnSelectListener.onSelect(mSelected, mDatas.get(mSelected));
+                }
+
             }
         }
 
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
+            //滑动时监测选中item的变化
+
+            //获取可视范围的第一个控件的位置
             int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
+            if(firstVisiblePos == RecyclerView.NO_POSITION){
+                return;
+            }
             Rect rect = new Rect();
             mLayoutManager.findViewByPosition(firstVisiblePos).getHitRect(rect);
-            boolean overScroll = Math.abs(rect.top) < mItemHeight / 2 ? false : true;
+            //被选中item是否已经滑动超出中间区域
+            boolean overScroll = Math.abs(rect.top) > mItemHeight / 2 ? true : false;
+            //更新可视范围内所有item的样式
             if (overScroll) {
                 for (int i = 1; i <= 1 + mOffset * 2; i++) {
                     TextView item = (TextView) mLayoutManager.findViewByPosition(firstVisiblePos + i);
@@ -215,17 +262,22 @@ public class WheelRecyclerView extends RecyclerView {
         }
     }
 
-    private class DividerItemDecoration extends ItemDecoration{
+    private class DividerItemDecoration extends ItemDecoration {
         @Override
         public void onDrawOver(Canvas c, RecyclerView parent, State state) {
-            float startX = mDividerWidth == DEFAULT_DIVIDER_WIDTH ? getMeasuredWidth() / 8 : getMeasuredWidth() / 2 - mDividerWidth / 2;
+            //绘制分割线
+            float startX = getMeasuredWidth() / 2 - mDividerWidth / 2;
             float topY = mItemHeight * mOffset;
-            float endX = mDividerWidth == DEFAULT_DIVIDER_WIDTH ? getMeasuredWidth() / 8 * 7 : getMeasuredWidth() / 2 + mDividerWidth / 2;
+            float endX = getMeasuredWidth() / 2 + mDividerWidth / 2;
             float bottomY = mItemHeight * (mOffset + 1);
 
             c.drawLine(startX, topY, endX, topY, mPaint);
             c.drawLine(startX, bottomY, endX, bottomY, mPaint);
         }
+    }
+
+    public interface OnSelectListener {
+        void onSelect(int position, String data);
     }
 
 }

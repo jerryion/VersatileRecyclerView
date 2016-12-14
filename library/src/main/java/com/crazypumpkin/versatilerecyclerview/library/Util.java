@@ -3,7 +3,7 @@ package com.crazypumpkin.versatilerecyclerview.library;
 import android.content.res.Resources;
 
 /**
- *
+ * 常用函数
  * Created by CrazyPumPkin on 2016/12/3.
  */
 
