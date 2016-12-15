@@ -137,13 +137,14 @@ public class WheelRecyclerView extends RecyclerView {
     }
 
     public void setData(List<String> datas) {
-        if(datas == null){
+        if (datas == null) {
             return;
         }
         mDatas.clear();
         mDatas.addAll(datas);
         mAdapter.notifyDataSetChanged();
         setSelect(0);
+        scrollTo(0,0);
     }
 
     public void setOnSelectListener(OnSelectListener listener) {
@@ -201,7 +202,7 @@ public class WheelRecyclerView extends RecyclerView {
             if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                 //当控件停止滚动时，获取可视范围第一个item的位置，滚动调整控件以使选中的item刚好处于正中间
                 int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
-                if(firstVisiblePos == RecyclerView.NO_POSITION){
+                if (firstVisiblePos == RecyclerView.NO_POSITION) {
                     return;
                 }
                 Rect rect = new Rect();
@@ -224,40 +225,35 @@ public class WheelRecyclerView extends RecyclerView {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-            //滑动时监测选中item的变化
+            setSelectedItem();
+        }
+    }
 
-            //获取可视范围的第一个控件的位置
-            int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
-            if(firstVisiblePos == RecyclerView.NO_POSITION){
-                return;
-            }
-            Rect rect = new Rect();
-            mLayoutManager.findViewByPosition(firstVisiblePos).getHitRect(rect);
-            //被选中item是否已经滑动超出中间区域
-            boolean overScroll = Math.abs(rect.top) > mItemHeight / 2 ? true : false;
-            //更新可视范围内所有item的样式
+    private void setSelectedItem(){
+        //获取可视范围的第一个控件的位置
+        int firstVisiblePos = mLayoutManager.findFirstVisibleItemPosition();
+        if (firstVisiblePos == RecyclerView.NO_POSITION) {
+            return;
+        }
+        Rect rect = new Rect();
+        mLayoutManager.findViewByPosition(firstVisiblePos).getHitRect(rect);
+        //被选中item是否已经滑动超出中间区域
+        boolean overScroll = Math.abs(rect.top) > mItemHeight / 2 ? true : false;
+        //更新可视范围内所有item的样式
+        for (int i = 0; i < 1 + mOffset * 2; i++) {
+            TextView item;
             if (overScroll) {
-                for (int i = 1; i <= 1 + mOffset * 2; i++) {
-                    TextView item = (TextView) mLayoutManager.findViewByPosition(firstVisiblePos + i);
-                    if (i == mOffset + 1) {
-                        item.setTextColor(mSelectTextColor);
-                        item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mSelectTextSize);
-                    } else {
-                        item.setTextColor(mUnselectTextColor);
-                        item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mUnselectTextSize);
-                    }
-                }
+                item = (TextView) mLayoutManager.findViewByPosition(firstVisiblePos + i + 1);
             } else {
-                for (int i = 0; i < 1 + mOffset * 2; i++) {
-                    TextView item = (TextView) mLayoutManager.findViewByPosition(firstVisiblePos + i);
-                    if (i == mOffset) {
-                        item.setTextColor(mSelectTextColor);
-                        item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mSelectTextSize);
-                    } else {
-                        item.setTextColor(mUnselectTextColor);
-                        item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mUnselectTextSize);
-                    }
-                }
+                item = (TextView) mLayoutManager.findViewByPosition(firstVisiblePos + i);
+            }
+
+            if (i == mOffset) {
+                item.setTextColor(mSelectTextColor);
+                item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mSelectTextSize);
+            } else {
+                item.setTextColor(mUnselectTextColor);
+                item.setTextSize(TypedValue.COMPLEX_UNIT_PX, mUnselectTextSize);
             }
         }
     }

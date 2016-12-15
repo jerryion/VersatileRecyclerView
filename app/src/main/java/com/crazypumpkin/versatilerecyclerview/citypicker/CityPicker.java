@@ -99,6 +99,7 @@ public class CityPicker implements PopupWindow.OnDismissListener, View.OnClickLi
 
     /**
      * 获取省份名称列表
+     *
      * @return
      */
     private List<String> getProvinceNames() {
@@ -111,6 +112,7 @@ public class CityPicker implements PopupWindow.OnDismissListener, View.OnClickLi
 
     /**
      * 获取某个省份的城市名称列表
+     *
      * @param provincePos
      * @return
      */
@@ -124,6 +126,7 @@ public class CityPicker implements PopupWindow.OnDismissListener, View.OnClickLi
 
     /**
      * 获取某个城市的县级区域名称列表
+     *
      * @param provincePos
      * @param cityPos
      * @return
@@ -140,6 +143,7 @@ public class CityPicker implements PopupWindow.OnDismissListener, View.OnClickLi
 
     /**
      * 弹出Window时使背景变暗
+     *
      * @param alpha
      */
     private void backgroundAlpha(float alpha) {
